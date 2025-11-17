@@ -16,10 +16,10 @@ prj = app.GetActiveProject()
 
 # app.Show() #(optativo)
 
-#objeto creado desde pf con las barras
-buses = app.GetCalcRelevantObjects('*.ElmTerm')
+
 
 #crar diccionario de buses
+buses = app.GetCalcRelevantObjects('*.ElmTerm')
 bus_dict = {}
 for bus in buses:
     bus_dict[bus.loc_name] = bus
@@ -38,13 +38,13 @@ ldf.Execute()
 
 # Acceder a atributos de buses
 for i in buses:
-    voltaje = bus_dict[i].GetAttribute('m:u')
-    print(f"Voltaje de la barra {i}: {voltaje}")
+    voltage = i.GetAttribute('m:u')
+    print(f"Voltaje de la barra {i.loc_name}: {voltage}")
 
 # Acceder a atributos de cargas
 for i in loads:
-    potencia = load_dict[i].GetAttribute('m:p')
-    print(f"Potencia de la carga {i}: {potencia}")
+    power = i.GetAttribute('m:p')
+    print(f"Potencia de la carga {i.loc_name}: {power}")
 
 """
 ldf = app.GetFromStudyCase('ComLdf')
