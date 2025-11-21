@@ -30,8 +30,8 @@ load_dict = {}
 for load in loads:
     load_dict[load.loc_name] = load
 
-# Get generators
-generators = app.GetCalcRelevantObjects('*.ElmGenstat')
+# Get generators (synchronous generators)
+generators = app.GetCalcRelevantObjects('*.ElmSym')
 
 # Get lines
 lines = app.GetCalcRelevantObjects('*.ElmLne')
@@ -68,8 +68,8 @@ for bus in buses:
 # Collect load data
 load_data = []
 for load in loads:
-    active_power = load.GetAttribute('m:P')  # Active power in MW
-    reactive_power = load.GetAttribute('m:Q')  # Reactive power in Mvar
+    active_power = load.GetAttribute('m:P:bus1')  # Active power in MW
+    reactive_power = load.GetAttribute('m:Q:bus1')  # Reactive power in Mvar
     power_factor = load.GetAttribute('m:cosphi')  # Power factor
     load_data.append({
         'Load': load.loc_name,
@@ -81,13 +81,18 @@ for load in loads:
 # Collect generator data
 gen_data = []
 for gen in generators:
-    active_power = gen.GetAttribute('m:P')  # Active power in MW
-    reactive_power = gen.GetAttribute('m:Q')  # Reactive power in Mvar
-    gen_data.append({
-        'Generator': gen.loc_name,
-        'Active Power (MW)': active_power,
-        'Reactive Power (Mvar)': reactive_power
-    })
+    try:
+        active_power = gen.GetAttribute('m:P:bus1')  # Active power in MW
+        reactive_power = gen.GetAttribute('m:Q:bus1')  # Reactive power in Mvar
+        # Only add if values are not None
+        if active_power is not None and reactive_power is not None:
+            gen_data.append({
+                'Generator': gen.loc_name,
+                'Active Power (MW)': active_power,
+                'Reactive Power (Mvar)': reactive_power
+            })
+    except Exception as e:
+        print(f"Error getting generator data for {gen.loc_name}: {e}")
 
 # Collect line data
 line_data = []
@@ -123,7 +128,7 @@ for bus in buses:
 print("\n=== Load Results ===")
 if loads:
     for load in loads:
-        power = load.GetAttribute('m:P')
+        power = load.GetAttribute('m:P:bus1')
         print(f"Power of load {load.loc_name}: {power:.4f} MW")
 else:
     print("No loads found")
@@ -131,8 +136,12 @@ else:
 print("\n=== Generator Results ===")
 if generators:
     for gen in generators:
-        power = gen.GetAttribute('m:P')
-        print(f"Power of generator {gen.loc_name}: {power:.4f} MW")
+        try:
+            active_power = gen.GetAttribute('m:P:bus1')
+            reactive_power = gen.GetAttribute('m:Q:bus1')
+            print(f"Generator {gen.loc_name}: P={active_power:.4f} MW, Q={reactive_power:.4f} MVar")
+        except Exception as e:
+            print(f"Error getting generator data for {gen.loc_name}: {e}")
 else:
     print("No generators found")
 
