@@ -52,7 +52,7 @@ for bus in buses:
     bus_dict[bus.loc_name] = bus
 
 # Create load dictionary
-loads = app.GetCalcRelevantObjects('*.ElmLoad')
+loads = app.GetCalcRelevantObjects('*.ElmLod')
 load_dict = {}
 for load in loads:
     load_dict[load.loc_name] = load
@@ -63,47 +63,27 @@ print(f"Found {len(bus_dict)} buses and {len(load_dict)} loads")
 # STEP 4: Find Load 39 and Bus 16
 # ============================================================================
 # Find Load 39
-if 'Load 39' in load_dict:
-    load_39 = load_dict['Load 39']
-    print(f"Found Load 39: {load_39.loc_name}")
-else:
-    # Try alternative naming (could be "Load39" or "39" or similar)
-    load_39 = None
-    for load_name, load_obj in load_dict.items():
-        if '39' in load_name:
-            load_39 = load_obj
-            print(f"Found load with 39 in name: {load_name}")
-            break
-    if load_39 is None:
-        raise Exception("Could not find Load 39. Available loads: " + str(list(load_dict.keys())))
+if 'Load 39' not in load_dict:
+    raise Exception("Could not find Load 39. Available loads: " + str(list(load_dict.keys())))
+load_39 = load_dict['Load 39']
+print(f"Found Load 39: {load_39.loc_name}")
 
 # Find Bus 16
-if 'Bus 16' in bus_dict:
-    bus_16 = bus_dict['Bus 16']
-    print(f"Found Bus 16: {bus_16.loc_name}")
-else:
-    # Try alternative naming
-    bus_16 = None
-    for bus_name, bus_obj in bus_dict.items():
-        if '16' in bus_name or bus_name == '16':
-            bus_16 = bus_obj
-            print(f"Found bus with 16 in name: {bus_name}")
-            break
-    if bus_16 is None:
-        raise Exception("Could not find Bus 16. Available buses: " + str(list(bus_dict.keys())))
+if 'Bus 16' not in bus_dict:
+    raise Exception("Could not find Bus 16. Available buses: " + str(list(bus_dict.keys())))
+bus_16 = bus_dict['Bus 16']
+print(f"Found Bus 16: {bus_16.loc_name}")
 
 # ============================================================================
 # STEP 5: Get initial load value (to calculate increase)
 # ============================================================================
-initial_load_p = load_39.GetAttribute('m:P:bus1')  # Initial active power in MW
-initial_load_q = load_39.GetAttribute('m:Q:bus1')  # Initial reactive power in Mvar
-print(f"Initial Load 39: P = {initial_load_p:.4f} MW, Q = {initial_load_q:.4f} Mvar")
+initial_load_p = load_39.GetAttribute('plini')  # Initial active power in MW
+print(f"Initial Load 39: P = {initial_load_p:.4f} MW")
 
-# Define load increase (e.g., 20% increase)
-load_increase_factor = 1.2  # 20% increase
+# Define load increase (27.82% increase)
+load_increase_factor = 1.2782  # 27.82% increase
 new_load_p = initial_load_p * load_increase_factor
-new_load_q = initial_load_q * load_increase_factor
-print(f"New Load 39 after increase: P = {new_load_p:.4f} MW, Q = {new_load_q:.4f} Mvar")
+print(f"New Load 39 after increase: P = {new_load_p:.4f} MW")
 
 # ============================================================================
 # STEP 6: Create load increase event (EvtParam)
@@ -112,30 +92,13 @@ event_folder = app.GetFromStudyCase('IntEvt')
 event_name = 'Load Increase Event 39'
 
 # Create parameter event for load increase (active power)
-load_event_p = event_folder.CreateObject('EvtParam', event_name + '_P')
-if load_event_p is None:
-    raise Exception("Could not create load increase event for active power")
-
-# Set event parameters for active power
-load_event_p.time = 1.0  # Time of the event (1 second)
+event_folder.CreateObject('EvtLod', event_name + '_P')
+load_event_p = event_folder.GetContents()[0]
+load_event_p.time = 0.5  # Time of the event (0.5 second)
 load_event_p.p_target = load_39  # Target is Load 39
-load_event_p.var_name = 'plini'  # Parameter name for active power load
-load_event_p.var_value = new_load_p  # New active power value
+load_event_p.iopt_type = 0 # type of load increase
+load_event_p.dP = 27.82  # New active power value
 
-# Create parameter event for reactive power (optional, to maintain power factor)
-load_event_q = None
-try:
-    load_event_q = event_folder.CreateObject('EvtParam', event_name + '_Q')
-    if load_event_q is not None:
-        load_event_q.time = 1.0  # Same time as active power
-        load_event_q.p_target = load_39
-        load_event_q.var_name = 'qlini'  # Parameter name for reactive power load
-        load_event_q.var_value = new_load_q  # New reactive power value
-        print(f"Created load increase events at t = {load_event_p.time} s (P and Q)")
-    else:
-        print(f"Created load increase event at t = {load_event_p.time} s (P only)")
-except:
-    print(f"Created load increase event at t = {load_event_p.time} s (P only, Q event failed)")
 
 # ============================================================================
 # STEP 7: Reset calculation and set up results monitoring
@@ -145,7 +108,7 @@ app.ResetCalculation()
 # Get results file and add frequency variable for Bus 16
 elmres = app.GetFromStudyCase('All calculations.ElmRes')
 elmres.Clear()
-elmres.AddVariable(bus_16, 'm:f')  # Add frequency variable (m:f is frequency in Hz)
+elmres.AddVariable(bus_16, 'm:fehz')  # Add frequency variable (m:fehz is frequency in Hz)
 
 print("Added frequency monitoring for Bus 16")
 
@@ -160,49 +123,23 @@ print("Initial conditions calculated")
 # STEP 9: Run dynamic simulation
 # ============================================================================
 sim = app.GetFromStudyCase('ComSim')
-sim.tstop = 10.0  # Simulation time: 10 seconds
+sim.tstop = 60.0  # Simulation time: 10 seconds
 sim.Execute()
 print(f"Dynamic simulation completed (t = 0 to {sim.tstop} s)")
 
 # ============================================================================
-# STEP 10: Export results to text file first
+# STEP 10: Export results directly to CSV
 # ============================================================================
-workspace_path = r"C:\Users\VM-PF\Documents\01 - Scripting Dynamic Simulation"
-results_txt = os.path.join(workspace_path, "temp_results.txt")
 
 comres = app.GetFromStudyCase('ComRes')
 comres.iopt_csel = 0
-comres.iopt_tsel = 0
-comres.iopt_locn = 2
+comres.iopt_locn = 1
 comres.ciopt_head = 1
 comres.pResult = elmres
-comres.ipt_exp = 4  # 4 is for text file
-comres.f_name = results_txt
+comres.ipt_exp = 6  # 6 is for CSV file
+comres.f_name = r'C:\Users\VM-PF\Documents\01 - Scripting Dynamic Simulation\src_code\frequency_bus16_results.csv'
 comres.Execute()
-print(f"Results exported to text file: {results_txt}")
-
-# ============================================================================
-# STEP 11: Read text file and convert to CSV
-# ============================================================================
-import numpy as np
-import pandas as pd
-
-# Read the text file (skip first 2 header lines)
-data = np.genfromtxt(results_txt, skip_header=2, filling_values=0.0)
-
-# Create DataFrame
-df_results = pd.DataFrame(data, columns=['Time (s)', 'Frequency (Hz)'])
-
-# ============================================================================
-# STEP 12: Export to CSV
-# ============================================================================
-csv_output = os.path.join(workspace_path, "src_code", "frequency_bus16_results.csv")
-df_results.to_csv(csv_output, index=False)
-print(f"Results exported to CSV: {csv_output}")
-print(f"\nResults summary:")
-print(f"  - Number of data points: {len(df_results)}")
-print(f"  - Time range: {df_results['Time (s)'].min():.3f} to {df_results['Time (s)'].max():.3f} s")
-print(f"  - Frequency range: {df_results['Frequency (Hz)'].min():.4f} to {df_results['Frequency (Hz)'].max():.4f} Hz")
+print(f"Results exported to CSV: frequency_bus16_results.csv")
 
 # ============================================================================
 # STEP 13: Clean up
@@ -212,15 +149,8 @@ app.ResetCalculation()
 
 # Delete the events
 load_event_p.Delete()
-if load_event_q is not None:
-    load_event_q.Delete()
 print("Events deleted and calculation reset")
 
-# Optionally delete temporary text file
-if os.path.exists(results_txt):
-    os.remove(results_txt)
-    print("Temporary text file removed")
-
 print("\n=== Simulation completed successfully ===")
-print(f"CSV file saved at: {csv_output}")
+print(f"CSV file saved at: frequency_bus16_results.csv")
 
