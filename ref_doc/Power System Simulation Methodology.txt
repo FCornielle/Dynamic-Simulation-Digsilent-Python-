@@ -1,0 +1,235 @@
+Power System Simulation Methodology
+
+Tools: Python (PyPSA) and DIgSILENT PowerFactory
+
+Simulation Scenarios
+
+All studies are performed under the following two scenarios:
+
+Base Case: Existing power system without the integration of new generation.
+
+New Generation Case: Power system with the proposed new generation connected.
+
+All results are compared between these two cases.
+
+1. Steady-State Simulations
+1.1 Dispatch and Load Flow Analysis
+
+Objective:
+Evaluate the impact of new generation on system operation and power flows.
+
+Methodology:
+
+Define generation dispatch in:
+
+PyPSA (optimization and load flow)
+
+DIgSILENT PowerFactory (AC load flow)
+
+Run load flow simulations for:
+
+Base Case
+
+New Generation Case
+
+Outputs:
+
+Bus voltage magnitudes and angles
+
+Active and reactive power flows
+
+Generator power outputs
+
+1.2 Voltage Profile Analysis
+
+Objective:
+Assess voltage level variations caused by new generation integration.
+
+Methodology:
+
+Extract bus voltage magnitudes for both scenarios.
+
+Compare voltage levels using a radar (spider) plot.
+
+Outputs:
+
+Radar plot of bus voltages
+
+Voltage deviation comparison between cases
+
+1.3 N-1 Contingency Analysis
+
+Objective:
+Analyze system security under single contingencies.
+
+Methodology:
+
+Perform N-1 contingency analysis using the DIgSILENT Contingency Analysis module for both scenarios.
+
+Evaluate line overloads and voltage violations.
+
+Outputs:
+
+Contingency result matrices
+
+Violation and severity plots
+
+Comparative analysis between scenarios
+
+1.4 Short-Circuit Analysis
+
+Objective:
+Evaluate the influence of new generation on fault levels.
+
+Methodology:
+
+Calculate short-circuit currents and short-circuit power:
+
+Base Case
+
+New Generation Case
+
+Analyze changes in fault levels at critical buses.
+
+Outputs:
+
+Short-circuit current and power values
+
+Comparative plots and tables
+
+2. Small-Signal Stability Analysis
+2.1 Eigenvalue-Based Small-Signal Stability
+
+Objective:
+Determine the impact of new generation on system oscillatory modes.
+
+Methodology:
+
+Perform eigenvalue analysis for:
+
+Base Case
+
+New Generation Case
+
+Identify critical modes and damping ratios.
+
+Outputs:
+
+Eigenvalue plots
+
+Damping ratio comparison
+
+2.2 Small-Signal Perturbation Response
+
+Objective:
+Assess dynamic response to small disturbances.
+
+Methodology:
+
+Apply a small-signal perturbation (e.g., step change in load or reference power).
+
+Plot generator speed deviations for both scenarios.
+
+Outputs:
+
+Generator speed vs. time plots
+
+Scenario comparison
+
+3. Transient Stability Analysis
+
+Objective:
+Evaluate system stability under large disturbances.
+
+Methodology:
+
+Apply a three-phase fault at a selected substation.
+
+Clear the fault after a defined clearing time.
+
+Perform simulations for both scenarios.
+
+Outputs:
+
+Bus voltage vs. time
+
+Generator speed vs. time
+
+Generator rotor angle vs. time
+
+Stability comparison between cases
+
+4. Voltage Stability Analysis
+
+Objective:
+Analyze voltage recovery and reactive power support during faults.
+
+Methodology:
+
+Apply a single-phase fault followed by successful auto-reclosing.
+
+Simulate both scenarios.
+
+Monitor reactive power responses.
+
+Outputs:
+
+Reactive power vs. time
+
+Voltage recovery curves
+
+Comparative analysis
+
+5. Frequency Stability Analysis
+
+Objective:
+Assess frequency behavior following generation loss.
+
+Methodology:
+
+Simulate disconnection of a generating unit.
+
+Perform simulations for:
+
+Base Case
+
+New Generation Case
+
+Analyze frequency dynamics.
+
+Key Metrics:
+
+System frequency
+
+Rate of Change of Frequency (RoCoF)
+
+Frequency nadir
+
+Generator speed response
+
+Outputs:
+
+Frequency and RoCoF plots
+
+Generator speed vs. time
+
+Comparative performance indicators
+
+6. Results Export and Documentation
+
+Requirement:
+
+Export all plots and numerical results for:
+
+Base Case (without new generation)
+
+New Generation Case (with new generation)
+
+Formats:
+
+Plots: PNG / PDF
+
+Numerical results: CSV / Excel
+
+Automated export using Python scripts when applicable
+
